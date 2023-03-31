@@ -1,0 +1,12 @@
+Instância BKV Opt
+instance_4.dat 1 Sim
+instance_5.dat 0 Sim
+instance_6.dat 3 Sim
+instance_10.dat 2 Sim
+instance_20.dat 6 Sim
+instance_50.dat 49 Sim
+instance_100.dat 10 Não
+instance_200.dat 15 Não
+instance_500.dat 100 Não
+instance_1000.dat 100 Não
+instance_10000.dat 500 Não
