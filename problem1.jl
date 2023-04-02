@@ -14,7 +14,8 @@ struct Graph
     vertices::Vector{Int}
     edges::Vector{Tuple{Int,Int}}
 end
-function createGraph(filepath :: String)
+
+function createGraph(filepath::String)
     f = open(filepath, "r")
     lines = readlines(f)
     instanceLenght = parse(Int, lines[1])
@@ -34,7 +35,7 @@ function createGraph(filepath :: String)
     end
     return Graph(vertices,edges)
 end
-
+@time begin
 path = "./instances/instance_1000.dat"
 graph = createGraph(path)
 f = open(path, "r")
@@ -42,23 +43,14 @@ lines = readlines(f)
 instanceLenght = parse(Int, lines[1])
 close(f)
 
-model = Model(GLPK.Optimizer);
+n_vertices = instanceLenght  # número de vértices do grafo
+n_edges = length(graph.edges) # número de arestas do grafo
+model = Model(GLPK.Optimizer)
 
 # Definindo as variáveis do modelo
-n_vertices = instanceLenght  # número de vértices do grafo
-@variable(model, x[i=1:n_vertices, j=1:n_vertices], Bin)
+@variable(model, x[1:n_edges], Bin)
 
-@objective(model, Max, sum(x));
-
-# Definindo as restrições do modelo
-for i in 1:n_vertices
-    @constraint(model, sum(x[j, i] for j in 1:n_vertices if (j, i) in graph.edges) + 
-        sum(x[i, j] for j in 1:n_vertices if (i, j) in graph.edges) <= 2)
-    @constraint(model,sum(x[j, i] for j in 1:n_vertices if !((j, i) in graph.edges)) + 
-    sum(x[i, j] for j in 1:n_vertices if !((i, j) in graph.edges)) == 0)
-end
-
-
+@objective(model, Max, sum(x))
 # Create an empty graph
 g = SimpleGraph(n_vertices)
 
@@ -67,25 +59,27 @@ for e in graph.edges
     add_edge!(g, e[1], e[2])
 end
 
-cycles = cycle_basis(g)
+# Definindo as restrições do modelo
+for i in 1:n_vertices
+    edges_in = [ idx for (idx, (u, v)) in enumerate(graph.edges) if  v == i]
+    edges_out = [ idx for (idx, (u, v)) in enumerate(graph.edges) if u == i]
+    @constraint(model, sum(x[idx] for idx in edges_in) + sum(x[idx] for idx in edges_out)<= 2)
+end
 
+
+cycles = cycle_basis(g)
 # constraint pra impedir ciclos
 for cycle in cycles
     cycle_edges = [(cycle[i], cycle[i+1]) for i=1:length(cycle)-1]
     cycle_edges = union(cycle_edges, [(cycle[end], cycle[1])])
-    @constraint(model, sum(x[min(i,j),max(i,j)] for (i,j) in cycle_edges) <= length(cycle) - 1)
+    edge_indices = [idx for (idx, e) in enumerate(graph.edges) if e in cycle_edges || reverse(e) in cycle_edges]
+    @constraint(model, sum(x[e_idx] for e_idx in edge_indices) <= length(cycle) - 1)
 end
-#println(model)
+
+# Resolve o modelo
 optimize!(model)
 termination_status(model)
 
 println("Solução:")
 println(value(sum(x)))
-
-for i in 1:n_vertices
-    for j in 1:n_vertices
-        if value(x[i, j]) == 1
-            #println("Aresta de $i para $j está presente.")
-        end
-    end
 end
