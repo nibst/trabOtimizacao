@@ -16,20 +16,43 @@ class GA:
     :param instancia:int - numero da instancia
     :return:list - melhor individuo encontrado
     """
-    g = 60
-    n = 10
+    g = 150
+    n = 15
     k = 5
-    m = 0.02
-    e = 5
+    m = 0.05
+    e = 10
     self.instancia = instancia
 
     self.lista, self.length = utils.get_list(instancia)
-    result = self.run_ga(g,n,k,m,e,self.lista)
+    result,graph_data = self.run_ga(g,n,k,m,e,self.lista)
     print(f"Entrada      = {self.lista}")
     print(f"Qp possiveis = {utils.get_ps_from_list(self.lista)[0]}")
     print(f"Resultado    = {[self.lista[i] for i in result]}")
     print(f"Somas        = {(self.evaluate(result,self.lista))}")
+    print(f"Valor ideal =  {utils.ideal_value(instancia)}")
 
+    utils.create_graph(graph_data)
+
+
+  def best_worst_avg_diversity(self,population,data):
+    """
+      Informações para o gráfico
+      Recebe uma lista de individuos e retorna seu melhor valor,pior valor, media dos valores e diversidade
+      Diversidade é baseada na quantidade de individuos com a mesma quantidade de conflitos.
+      :param population: lista com os individuos
+      :return: quadrupla com melhor,pior, media e o grau de diversidade
+    """
+    diversity_list = []
+    smallest, biggest, sums = float("inf"), -float("inf"), 0
+    for individual in population:
+      value = self.evaluate(individual,data)
+      smallest = value if value < smallest else smallest
+      biggest =  value if value > biggest else biggest
+      sums += value
+      diversity_list.append(value)
+
+    diversity = len(set(diversity_list)) / len(population)
+    return smallest,biggest,sums/len(population),diversity
 
 
   def evaluate(self,individual,data):
@@ -42,6 +65,7 @@ class GA:
       """
       # TODO teste com profiler: Vale mais a pena verificar se está na lista ou calcular?
       total = 0
+      #print("erro: individual",individual)
       for i in range(len(individual)-1):
         if utils.isPerfectSquare(data[individual[i]] + data[individual[i+1]]):
           total += 1
@@ -54,11 +78,17 @@ class GA:
       :param participants:list - lista de individuos
       :return:list melhor individuo da lista recebida
       """
-      best,best_index= float("inf"), 0
-
+      best= -float("inf")
+      best_index = None 
       values = []
-      for individual in participants:
-        values.append(self.evaluate(individual,ps_list))
+      for i,individual in enumerate(participants):
+        value = self.evaluate(individual,ps_list)
+        if value > best:
+          best_index = i
+          best = value
+      return participants[best_index]
+
+      #values.append(self.evaluate(individual,ps_list))
       reversed(values)   
       probs =[v / sum(values) for v in values]
       return random.choices(participants, weights=probs,k=1)[0]
@@ -149,6 +179,7 @@ class GA:
       # Cria populacao a partir da listas de elementos que podem formar
       # uma dupla de qp
       population = []
+      graph_data = []
       indexes = [i for i in range(len(ps_list))]
 
       for _ in range(n):
@@ -158,6 +189,7 @@ class GA:
 
       for _ in range(g):
         p = []
+        graph_data.append(self.best_worst_avg_diversity(population,ps_list))
         while len(p) < e:
           tournament_winner = self.tournament(random.sample(population,k),ps_list)
           #print(f"winner = {tournament_winner}")
@@ -166,7 +198,6 @@ class GA:
 
 
           child = self.crossover(p1,p2)
-          m = 0.02
           child = self.mutate(child,m)
           p.append(child)
 
@@ -174,7 +205,8 @@ class GA:
 
       #print(tournament(participants))
       #print(evaluate(tournament(participants)))
-      return self.tournament(population,ps_list)
+      print(len(graph_data))
+      return self.tournament(population,ps_list), graph_data
 
 if __name__ == "__main__":
     # read the first command-line argument and pass it to MyClass constructor

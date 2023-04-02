@@ -1,4 +1,5 @@
 import math
+import matplotlib.pyplot as plt
 def isPerfectSquare(n):
     return math.ceil(math.sqrt(n)) == math.floor(math.sqrt(n))
 
@@ -14,6 +15,17 @@ def open_file(instancia):
   length, lista = int(data[0]), (data[1:])
   return length,lista
 
+def ideal_value(instancia):
+  location = "./instances/resultados.out"
+  data = open(location).read().splitlines()
+  arquivo = "instance_"+ str(instancia)+".dat"
+  for instance in data:
+    lista = instance.split()
+    if arquivo == lista[0]:
+        return lista[1]
+
+
+
 def get_list(instancia):
   length, lista = open_file(instancia)
 
@@ -21,6 +33,37 @@ def get_list(instancia):
   ps_list = get_numbers(ps,qtt.copy())
   return ps_list, length
 
+
+def create_graph(graph_data):
+  x = range(len(graph_data))
+  menor = [a[0] for a in graph_data]
+  maior = [a[1] for a in graph_data]
+  media = [a[2] for a in graph_data]
+  diver =[a[3] for a in graph_data]
+  fig, ax1 = plt.subplots()
+
+  # MMM
+  ax1.set_ylabel('Pares')
+  ax1.plot(x, menor, label='Menor')
+  ax1.plot(x, maior, label='Maior')
+  ax1.plot(x, media, label='Media')
+
+  # Diversidade
+  #ax2 = ax1.twinx()
+  #ax2.plot(x, diver, label='Diversidade',color='red')
+
+  # Set the label for the secondary y-axis
+  #ax2.set_ylabel('Diversidade')
+  ax1.legend(loc='upper left')
+  #ax2.legend(loc='upper right')
+
+
+  # Set the x-axis label
+  ax1.set_xlabel('Iteração')
+
+# Display the plot
+
+  plt.show()
 def get_ps_from_list(data):
     """
     input: lista de números
