@@ -1,12 +1,12 @@
 import random
-import math
+from parser import parse_args
 import utils
 import sys
 
 
 class GA:
   # def __init__(self,g,n,k,m,e,instancia)
-  def __init__(self,instancia):
+  def __init__(self):
     """
     :param g:int - numero de gerações
     :param n:int - numero de individuos
@@ -16,22 +16,28 @@ class GA:
     :param instancia:int - numero da instancia
     :return:list - melhor individuo encontrado
     """
-    g = 150
-    n = 15
-    k = 5
-    m = 0.05
-    e = 10
-    self.instancia = instancia
 
-    self.lista, self.length = utils.get_list(instancia)
-    result,graph_data = self.run_ga(g,n,k,m,e,self.lista)
+    args = parse_args()
+    g = args.g
+    n = args.n
+    k = args.k
+    m = args.m
+    e = args.e
+    self.i = args.i
+
+    self.lista, self.length = utils.get_list(args.i)
+    self.result,graph_data = self.run_ga(g,n,k,m,e,self.lista)
+    """
     print(f"Entrada      = {self.lista}")
     print(f"Qp possiveis = {utils.get_ps_from_list(self.lista)[0]}")
     print(f"Resultado    = {[self.lista[i] for i in result]}")
     print(f"Somas        = {(self.evaluate(result,self.lista))}")
-    print(f"Valor ideal =  {utils.ideal_value(instancia)}")
+    print(f"Valor ideal =  {utils.ideal_value(self.instancia)}")
+    """
+    # VOLTAR PARA O IRACE
+    print(self.evaluate(self.result,self.lista) * -1) # iRace sempre minimiza
 
-    utils.create_graph(graph_data)
+    #utils.create_graph(graph_data)
 
 
   def best_worst_avg_diversity(self,population,data):
@@ -78,21 +84,17 @@ class GA:
       :param participants:list - lista de individuos
       :return:list melhor individuo da lista recebida
       """
-      best= -float("inf")
-      best_index = None 
+      probs = []
       values = []
-      for i,individual in enumerate(participants):
-        value = self.evaluate(individual,ps_list)
-        if value > best:
-          best_index = i
-          best = value
-      return participants[best_index]
-
-      #values.append(self.evaluate(individual,ps_list))
-      reversed(values)   
-      probs =[v / sum(values) for v in values]
+      for individual in participants:
+        values.append(self.evaluate(individual,ps_list))
+        reversed(values)   
+      total = sum(values)
+      if total == 0:
+        total = 1
+      probs =[v / total for v in values]
       return random.choices(participants, weights=probs,k=1)[0]
-
+      
   def crossover(self,p1, p2):
       """
       Partially Mapped Crossover (PMX):
@@ -142,6 +144,8 @@ class GA:
       :return:list - individuo apos mutacao (ou intacto, caso a prob. de mutacao nao seja satisfeita)
       """
       if random.random() <= m:
+        if not len(individual):
+          return individual
         pos1 = random.randint(0,len(individual)-1)
         pos2 = random.randint(0,len(individual)-1)
         while pos1 == pos2:  # garente que ocorra swap
@@ -189,13 +193,13 @@ class GA:
 
       for _ in range(g):
         p = []
-        graph_data.append(self.best_worst_avg_diversity(population,ps_list))
+        #graph_data.append(self.best_worst_avg_diversity(population,ps_list))
         while len(p) < e:
-          tournament_winner = self.tournament(random.sample(population,k),ps_list)
+          p1 = self.tournament(random.sample(population,k),ps_list)
+          p2 = self.tournament(random.sample(population,k),ps_list)
           #print(f"winner = {tournament_winner}")
-          p.append(tournament_winner)
-          p1, p2 = select_parent(p)
-
+          #p.append(tournament_winner)
+          #p1, p2 = select_parent(p)
 
           child = self.crossover(p1,p2)
           child = self.mutate(child,m)
@@ -205,10 +209,31 @@ class GA:
 
       #print(tournament(participants))
       #print(evaluate(tournament(participants)))
-      print(len(graph_data))
+      #print(len(graph_data))
       return self.tournament(population,ps_list), graph_data
 
 if __name__ == "__main__":
     # read the first command-line argument and pass it to MyClass constructor
-    my_instance = GA(sys.argv[1])
+    #print(sys.argv)
+    maior = -float("inf")
+    lista = []
+    melhor_solucao = []
+    my_instance = GA()
+    """
+    for _ in range(1):
+      my_instance = GA()
+      resultado = my_instance.result
+      valor = my_instance.evaluate(resultado,my_instance.lista)
+      lista.append(valor)
+      if valor > maior:
+        maior = valor
+        melhor_solucao = resultado
+
+    avg = sum(lista)/len(lista)
+    print(f"Maior valor encontrado    = {maior}")
+    print(f"Valor médio encontrado    = {avg}")
+    #print(f"Valor da solução do prof. = {utils.ideal_value(my_instance.i)}")
+    print(f"Melhor solução encontrada = {[my_instance.lista[i] for i in resultado]}")
+    """
+
 

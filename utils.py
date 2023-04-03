@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 def isPerfectSquare(n):
     return math.ceil(math.sqrt(n)) == math.floor(math.sqrt(n))
 
-def open_file(instancia):
+def open_file(location):
   """
   param:instancia:str - nome do arquivo a ser aberto
   out: len(lista), lista
   """ 
-  instance = "instance_" + str(instancia) +".dat"
-  location = "./instances/" + instance
+  #instance = "instance_" + str(instancia) +".dat"
+  #location = "./instances/" + instance
   data = open(location).read().split()
 
   length, lista = int(data[0]), (data[1:])
