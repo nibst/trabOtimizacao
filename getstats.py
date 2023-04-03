@@ -110,10 +110,8 @@ class GA:
           total += 1
       return total
 
-  def tournament(self,participants,ps_list):
+  def tournament(self,participants):
       """
-      Recebe uma lista com vários indivíduos e retorna o melhor deles, com relação
-      ao numero de conflitos
       :param participants:list - lista de individuos
       :return:list melhor individuo da lista recebida
       """
@@ -125,7 +123,7 @@ class GA:
       total = sum(values)
       if total == 0:
         total = 1
-        probs = [1] * 10
+        probs = [1] * len(values)
       else:
         probs =[v / total for v in values]
       return random.choices(participants, weights=probs,k=1)[0]
@@ -172,8 +170,6 @@ class GA:
   def mutate(self,individual, m):
       """
       Recebe um indivíduo e a probabilidade de mutação (m).
-      Caso random() < m, sorteia uma posição aleatória do indivíduo e
-      coloca nela um número aleatório entre 1 e 8 (inclusive).
       :param individual:list
       :param m:int - probabilidade de mutacao
       :return:list - individuo apos mutacao (ou intacto, caso a prob. de mutacao nao seja satisfeita)
@@ -216,17 +212,6 @@ class GA:
       :param e:int - número de indivíduos no elitismo
       :return:list - melhor individuo encontrado
       """
-      def select_parent(population):
-        """
-          Seleciona dois individuos de uma populacao
-          :param population: lista com os individuos
-          :return: 2 individuos (listas de 8 elementos)
-        """
-        p1 = random.choice(population)
-        p2 = random.choice(population)
-        #print(f"populacao = {population} \np1 = {p1} \np2 = {p2}")
-
-        return p1,p2
 
       # Cria populacao a partir da listas de elementos que podem formar
       # uma dupla de qp
@@ -238,14 +223,14 @@ class GA:
         shuffled_list = indexes.copy()
         random.shuffle(shuffled_list)
         population.append(shuffled_list)
-
+      all_population = []
       for _ in range(g):
         p = []
         p.extend(self.top(e,population))
         graph_data.append(self.best_worst_avg_diversity(population,ps_list))
         while len(p) < n:
-          p1 = self.tournament(random.sample(population,k),ps_list)
-          p2 = self.tournament(random.sample(population,k),ps_list)
+          p1 = self.tournament(random.sample(population,k))
+          p2 = self.tournament(random.sample(population,k))
           #print(f"winner = {tournament_winner}")
           #p.append(tournament_winner)
           #p1, p2 = select_parent(p)
@@ -255,11 +240,11 @@ class GA:
           p.append(child)
 
         population = p
-
+        all_population += p
       #print(tournament(participants))
       #print(evaluate(tournament(participants)))
       #print(len(graph_data))
-      return self.tournament(population,ps_list), graph_data
+      return self.top(1,all_population)[0], graph_data
 
 if __name__ == "__main__":
     # read the first command-line argument and pass it to MyClass constructor
