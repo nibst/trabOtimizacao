@@ -1,3 +1,4 @@
+import copy
 import random
 from parser import parse_args
 import utils
@@ -38,7 +39,7 @@ class GA:
       iteracoes = 10 if instancia not in [1000,10000] else 1
       for _ in range(iteracoes):
         resultado, graph_data  = self.run_ga(g,n,k,m,e,self.lista)
-        valor = self.evaluate(resultado,self.lista)
+        valor = self.evaluate(resultado)
         valores.append(valor)
         if valor > maior:
           maior = valor
@@ -54,7 +55,7 @@ class GA:
       print(f"#      {instancia}             #")
       print(f"#######################")
 
-      print(f"Maior valor encontrado    = {self.evaluate(melhor_solucao,self.lista)}")
+      print(f"Maior valor encontrado    = {self.evaluate(melhor_solucao)}")
       print(f"Valor médio encontrado    = {avg}")
       print(f"Melhor solução encontrada = {[self.lista[i] for i in melhor_solucao]}")
       #print(f"Valor da solução do prof. = {utils.ideal_value(my_instance.i)}")
@@ -83,7 +84,7 @@ class GA:
     diversity_list = []
     smallest, biggest, sums = float("inf"), -float("inf"), 0
     for individual in population:
-      value = self.evaluate(individual,data)
+      value = self.evaluate(individual)
       smallest = value if value < smallest else smallest
       biggest =  value if value > biggest else biggest
       sums += value
@@ -93,7 +94,7 @@ class GA:
     return smallest,biggest,sums/len(population),diversity
 
 
-  def evaluate(self,individual,data):
+  def evaluate(self,individual):
       """
       Recebe um indivíduo (lista de inteiros) e retorna o número de pares
       cuja soma forma um quadrado perfeito.
@@ -105,7 +106,7 @@ class GA:
       total = 0
       #print("erro: individual",individual)
       for i in range(len(individual)-1):
-        if utils.isPerfectSquare(data[individual[i]] + data[individual[i+1]]):
+        if utils.isPerfectSquare(self.lista[individual[i]] + self.lista[individual[i+1]]):
           total += 1
       return total
 
@@ -119,7 +120,7 @@ class GA:
       probs = []
       values = []
       for individual in participants:
-        values.append(self.evaluate(individual,ps_list))
+        values.append(self.evaluate(individual))
         reversed(values)   
       total = sum(values)
       if total == 0:
@@ -192,6 +193,19 @@ class GA:
 
       return individual
 
+  def top(self,e,population):
+    """
+    get top e individuals of population
+    """
+    topE = []
+    sorted= copy.deepcopy(population)
+    sorted.sort(key=lambda x: self.evaluate(x),reverse=True)
+    for i in range(e):
+      topE.append(sorted[i])
+    return topE
+  
+
+
   def run_ga(self,g, n, k, m, e,ps_list):
       """
       Executa o algoritmo genético e retorna o indivíduo com o menor número de ataques entre rainhas
@@ -227,8 +241,9 @@ class GA:
 
       for _ in range(g):
         p = []
+        p.extend(self.top(e,population))
         graph_data.append(self.best_worst_avg_diversity(population,ps_list))
-        while len(p) < e:
+        while len(p) < n:
           p1 = self.tournament(random.sample(population,k),ps_list)
           p2 = self.tournament(random.sample(population,k),ps_list)
           #print(f"winner = {tournament_winner}")
@@ -239,7 +254,7 @@ class GA:
           child = self.mutate(child,m)
           p.append(child)
 
-        population += p
+        population = p
 
       #print(tournament(participants))
       #print(evaluate(tournament(participants)))
