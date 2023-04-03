@@ -10,7 +10,8 @@ def open_file(location):
   """ 
   #instance = "instance_" + str(instancia) +".dat"
   #location = "./instances/" + instance
-  data = open(location).read().split()
+  data = open(location).read()
+  data = data.split()
 
   length, lista = int(data[0]), (data[1:])
   return length,lista
@@ -24,8 +25,6 @@ def ideal_value(instancia):
     if arquivo == lista[0]:
         return lista[1]
 
-
-
 def get_list(instancia):
   length, lista = open_file(instancia)
 
@@ -33,8 +32,16 @@ def get_list(instancia):
   ps_list = get_numbers(ps,qtt.copy())
   return ps_list, length
 
+def get_list_stats(instancia):
+  instance = "instance_" + str(instancia) +".dat"
+  location = "./instances/" + instance
+  length, lista = open_file(location)
+  ps, qtt = get_ps_from_list(lista)
+  ps_list = get_numbers(ps,qtt.copy())
+  return ps_list, length
 
-def create_graph(graph_data):
+
+def create_graph(graph_data,save,name):
   x = range(len(graph_data))
   menor = [a[0] for a in graph_data]
   maior = [a[1] for a in graph_data]
@@ -62,8 +69,11 @@ def create_graph(graph_data):
   ax1.set_xlabel('Iteração')
 
 # Display the plot
+  if save:
+    plt.savefig("./img/"+str(name)+'.png')
+  else:
+    plt.show()
 
-  plt.show()
 def get_ps_from_list(data):
     """
     input: lista de números

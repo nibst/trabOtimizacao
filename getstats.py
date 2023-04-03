@@ -227,7 +227,7 @@ class GA:
 
       for _ in range(g):
         p = []
-        #graph_data.append(self.best_worst_avg_diversity(population,ps_list))
+        graph_data.append(self.best_worst_avg_diversity(population,ps_list))
         while len(p) < e:
           p1 = self.tournament(random.sample(population,k),ps_list)
           p2 = self.tournament(random.sample(population,k),ps_list)
